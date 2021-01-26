@@ -1,10 +1,13 @@
 import os
-import json
 
 from fastapi import FastAPI
-import pandas as pd
+
+from scripts.helpers import (get_last_modified_time,
+                             parse_csv)
+
 
 app = FastAPI()
+DATA_DIRECTORY = 'data'
 
 
 @app.get("/")
@@ -14,6 +17,11 @@ def get_available_data():
 
 @app.get("/get_data/{filename}")
 def get_data(filename):
-    df_from_file = pd.read_csv(f'data/{filename}')
-    df_json_string = df_from_file.to_json()
-    return json.loads(df_json_string)
+    file_path = os.path.join(DATA_DIRECTORY, filename)
+    parsed_csv = parse_csv(file_path)
+
+    modified_time = get_last_modified_time(file_path)
+
+    return {
+        'lastModified': modified_time,
+        'data': parsed_csv}
